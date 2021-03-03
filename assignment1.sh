@@ -2,7 +2,20 @@ function generate_rand(){
     echo "This function will generate 10 integers randomly(the range is between your following 2 inputs) and calculate the average."
     
     read -p "Please input your lower bound: " lowerBound
+
+    while [[ ! "${lowerBound}" =~ ^[0-9]+$ ]]
+    do
+        echo "Positive integer only!"
+        read -p "Please input your lower bound: " lowerBound
+    done
+
     read -p "Please input your upper bound: " upperBound
+
+    while ! [[ "${upperBound}" =~ ^[0-9]+$ ]] || [[ "${lowerBound}" -gt "${upperBound}" ]]
+    do
+        echo "Upper bound must be greater than lower bound and be a positive integer!"
+        read -p "Please input your upper bound: " upperBound
+    done
 
     sum=0
 
@@ -13,7 +26,8 @@ function generate_rand(){
 
     average=$(echo "scale=2; ${sum}/10" | bc)
     datetime=$(date +%Y-%m-%dT%H:%M:%S%z)
-    echo "${average}" | tee average_"${datetime}".txt
+    
+    echo "${average}" > average_"${datetime}".txt
 }
 
 function read_dataset(){
@@ -21,14 +35,21 @@ function read_dataset(){
 
     read -p "The path of your given file: " filePath
 
+    while [ ! -f "${filePath}" ]
+    do
+        echo "The path which you input is wrong."
+        read -p "The path of your given file: " filePath
+    done
+
     tempStr=""
     counter=0
 
-    while read line || [ -n "${line}" ] 
+    while read line || [ -n "${line}" ]
     do
         n=1
         sum=0
         counter=$(("${counter}"+1))
+
         until [ "${n}" == 11 ]
         do 
             sum=$(("${sum}"+$(echo "${line}" | cut -d "," -f "${n}")))
@@ -38,18 +59,18 @@ function read_dataset(){
         average=$(echo "scale=2; ${sum}/10" | bc)
         
         tempStr="${tempStr}""${average}",
-        echo "${tempStr}"
 
-        if [ "${counter}" != 0 ] && [ $(("${counter}"%10)) == 0 ]; then
-          tempStr=$(echo "${tempStr}" | sed "s/,$/\n /")
-          echo "${tempStr}"          
+        if [ "${counter}" != 0 ] && [ $(("${counter}"%10)) == 0 ]
+        then
+          tempStr=$(echo "${tempStr}" | sed "s/,$/\n /") 
         fi
 
-    done < /home/jason/Desktop/bash_programming_assignments/test.txt 
-           #${filePath}
+    done < "${filePath}"
     
     datetime=$(date +%Y-%m-%dT%H:%M:%S%z)
-    echo "${tempStr}" | sed "s/,$//g" | tee average_"${datetime}".txt
+    
+    average=$(echo "${tempStr}" | sed "s/,$//g")
+    echo "${average}" > average_"${datetime}".txt
 }
 
 echo "Please input 1 or 2 to use this program."
